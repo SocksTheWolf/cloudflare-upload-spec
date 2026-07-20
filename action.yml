@@ -3,7 +3,7 @@ description: Uploads endpoint specs to the API Shield
 author: SocksTheWolf
 
 branding:
-  icon: cloud_upload
+  icon: upload-cloud
   color: orange
 
 inputs:
