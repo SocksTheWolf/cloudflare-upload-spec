@@ -3,7 +3,7 @@ import os__default from 'os';
 import 'crypto';
 import * as fs from 'fs';
 import { promises } from 'fs';
-import 'path';
+import { resolve } from 'path';
 import http from 'http';
 import https from 'https';
 import 'net';
@@ -38835,7 +38835,7 @@ async function run() {
     const file_name = getInput("file_name");
     const auto_enable = getInput("enable");
     const delete_others = getInput("delete_others");
-
+    const skip_failed_deletes = getInput("skip_failed_deletes");
     const base_uri = `https://api.cloudflare.com/client/v4/zones/${zone_id}/schema_validation`;
 
     const auth_headers = new Headers({
@@ -38844,7 +38844,10 @@ async function run() {
 
     // Read the spec
     info("reading openapi spec...");
-    const data = await fs$1.readFile(file_name, { encoding: 'utf8' });
+    const data = await fs$1.readFile(resolve("./", file_name), { encoding: 'utf8' });
+
+    // build the upload payload
+    info("building upload payload...");
     const schema_payload = {
       "kind": "openapi_v3",
       "name": file_name,
@@ -38854,18 +38857,24 @@ async function run() {
       schema_payload.validation_enabled = true;
     }
 
-    info("uploading spec...");
     let new_schema_key = null;
+    // copy the headers, we need to add content type
+    const upload_headers = auth_headers;
+    upload_headers.set("Content-Type", "application/json");
+
+    // run the upload
+    info("uploading spec...");
     const api_shield_upload_resp = await fetch(`${base_uri}/schemas`, {
-      headers: auth_headers,
+      headers: upload_headers,
       method: "POST",
       body: JSON.stringify(schema_payload)
     });
     if (api_shield_upload_resp.ok) {
       const data = await api_shield_upload_resp.json();
       if (data.success) {
-        new_schema_key = data.result.schema.schema_id;
-        info("new schema uploaded successfully!");
+        // save out the new schema's id, we want to make sure we don't delete it
+        new_schema_key = data.result.schema_id;
+        info(`uploaded new schema ${new_schema_key}`);
       } else {
         setFailed("failed to upload to the API Shield");
         return;
@@ -38875,13 +38884,15 @@ async function run() {
       return;
     }
 
+    // if we are not to download the other schemas, then end the task asap
     if (!delete_others) {
       notice("task complete");
       return;
     }
 
     let other_schemas = [];
-    info("fetching other specs...");
+    info("fetching other schemas...");
+    // grab all the current schemas that are uploaded
     const get_uploaded_schemas = await fetch(`${base_uri}/schemas`, {
       headers: auth_headers
     });
@@ -38890,9 +38901,13 @@ async function run() {
       const data = await get_uploaded_schemas.json();
 
       // Parse the output, looking for openapi schemas that match this name
+      // and are also currently enabled
+      //
+      // we do skip over the schema we just uploaded though
       for (const schema_data of data.result) {
         if (schema_data.kind === "openapi_v3" &&
             schema_data.name === file_name &&
+            schema_data.validation_enabled === true &&
             schema_data.schema_id !== new_schema_key
         ) {
           other_schemas.push(schema_data.schema_id);
@@ -38903,15 +38918,17 @@ async function run() {
       return;
     }
 
-    info(`found ${other_schemas.length} schemas...`);
-
-    if (other_schemas.length <= 1) {
+    // if there are no other schemas to manage, then end the task
+    if (other_schemas.length == 0) {
       notice("task complete");
       return;
     }
 
-    info(`attempting to delete other schemas...`);
+    // otherwise, march through and delete the other schemas
+    let failed_delete = false;
+    info(`attempting to delete ${other_schemas.length} other schemas...`);
     for (const schema_id of other_schemas) {
+      failed_delete = false;
       const delete_query = await fetch(`${base_uri}/schemas/${schema_id}`, {
         headers: auth_headers,
         method: "DELETE"
@@ -38921,10 +38938,19 @@ async function run() {
         if (delete_query_resp.success)
           info(`* deleted schema ${schema_id}`);
         else
-          warning(`* failed to delete ${schema_id}`);
+          failed_delete = true;
       } else {
-        setFailed(`failed to process ${schema_id}`);
-        return;
+        failed_delete = true;
+      }
+
+      // handle delete task failure
+      if (failed_delete) {
+        if (skip_failed_deletes)
+          warning(`* failed to delete ${schema_id}`);
+        else {
+          setFailed(`failed to delete ${schema_id}, exiting!!`);
+          return;
+        }
       }
     }
     notice("task complete");

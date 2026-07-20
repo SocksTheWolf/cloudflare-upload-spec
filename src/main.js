@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as fs from 'fs/promises';
+import { resolve } from 'path';
 
 /**
  * The main function for the action.
@@ -23,7 +24,7 @@ export async function run() {
 
     // Read the spec
     core.info("reading openapi spec...")
-    const data = await fs.readFile(file_name, { encoding: 'utf8' });
+    const data = await fs.readFile(resolve("./", file_name), { encoding: 'utf8' });
 
     // build the upload payload
     core.info("building upload payload...");
