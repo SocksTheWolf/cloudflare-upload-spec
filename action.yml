@@ -1,0 +1,33 @@
+name: Cloudflare API Shield Upload
+description: Uploads endpoint specs to the API Shield
+author: SocksTheWolf
+
+branding:
+  icon: cloud_upload
+  color: orange
+
+inputs:
+  zone_id:
+    description: Cloudflare Zone ID
+    default: ""
+    required: true
+  api_token:
+    description: Cloudflare API Token for managing Domain/API Gateways
+    required: true
+    default: ""
+  file_name:
+    description: The specification's file name
+    default: "openapi.json"
+  delete_others:
+    description: Deletes other specs that match this name
+    default: true
+  skip_failed_deletes:
+    description: If we fail to delete a spec, should we continue the task?
+    default: true
+  enable:
+    description: If this new spec should be enabled automatically
+    default: true
+
+runs:
+  using: node24
+  main: dist/index.js
