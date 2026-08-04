@@ -47,10 +47,13 @@
   },
   "overrides": {
     "@actions/github": {
-      "undici": "latest"
+      "undici": "^7.29.0"
     },
     "@actions/http-client": {
-      "undici": "latest"
+      "undici": "^7.29.0"
+    },
+    "wrangler": {
+      "undici": "^7.29.0"
     }
   }
 }
