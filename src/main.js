@@ -49,14 +49,14 @@ export async function run() {
       method: "POST",
       body: JSON.stringify(schema_payload)
     });
-    const data = await api_shield_upload_resp.json();
-    if (api_shield_upload_resp.ok && data.success) {
+    const upload_data = await api_shield_upload_resp.json();
+    if (api_shield_upload_resp.ok && upload_data.success) {
       // save out the new schema's id, we want to make sure we don't delete it
-      new_schema_key = data.result.schema_id;
+      new_schema_key = upload_data.result.schema_id;
       core.info(`uploaded new schema ${new_schema_key}`);
     } else {
       let errorArray = [];
-      data.errors.forEach((itm) => {
+      upload_data.errors.forEach((itm) => {
         let msg = `${itm.code} - ${itm.message}`;
         if (itm.source !== undefined) {
           msg += ` in ${JSON.stringify(itm.source)}`;
