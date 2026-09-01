@@ -19,7 +19,7 @@ inputs:
     description: The specification's file name
     default: "openapi.json"
   delete_others:
-    description: Deletes other specs that match this name
+    description: Deletes other specs that match the same name as the value in `file_name`
     default: true
   skip_failed_deletes:
     description: If we fail to delete a spec, should we continue the task?

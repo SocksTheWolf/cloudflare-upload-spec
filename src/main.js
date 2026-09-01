@@ -49,18 +49,22 @@ export async function run() {
       method: "POST",
       body: JSON.stringify(schema_payload)
     });
-    if (api_shield_upload_resp.ok) {
-      const data = await api_shield_upload_resp.json();
-      if (data.success) {
-        // save out the new schema's id, we want to make sure we don't delete it
-        new_schema_key = data.result.schema_id;
-        core.info(`uploaded new schema ${new_schema_key}`);
-      } else {
-        core.setFailed("failed to upload to the API Shield");
-        return;
-      }
+    const data = await api_shield_upload_resp.json();
+    if (api_shield_upload_resp.ok && data.success) {
+      // save out the new schema's id, we want to make sure we don't delete it
+      new_schema_key = data.result.schema_id;
+      core.info(`uploaded new schema ${new_schema_key}`);
     } else {
-      core.setFailed(`Unable to upload to API Shield, got error ${api_shield_upload_resp.status}`);
+      let errorArray = [];
+      data.errors.forEach((itm) => {
+        let msg = `${itm.code} - ${itm.message}`;
+        if (itm.source !== undefined) {
+          msg += ` in ${JSON.stringify(itm.source)}`;
+        }
+        errorArray.push(msg);
+        core.notice(msg);
+      });
+      core.setFailed(`Unable to upload to API Shield, error code: ${api_shield_upload_resp.status}, reasons:\n${errorArray.join("\n")}`);
       return;
     }
 
@@ -94,7 +98,7 @@ export async function run() {
         }
       }
     } else {
-      core.setFailed(`Could not get other upload schemas, got error ${get_uploaded_schemas.status}`);
+      core.setFailed(`Could not get other API schemas, got error ${get_uploaded_schemas.status}`);
       return;
     }
 
