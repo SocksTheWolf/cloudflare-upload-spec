@@ -63,13 +63,16 @@ export async function run() {
         }
         errorArray.push(msg);
       });
-      core.setFailed(`Unable to upload to API Shield, error code: ${api_shield_upload_resp.status}, reasons:\n${errorArray.join("\n")}`);
+      const multiLineError = errorArray.join("\n");
+      core.setFailed(`Unable to upload to API Shield, error code: ${api_shield_upload_resp.status}, reasons:\n${multiLineError}`);
+      core.setOutput("schema_errors", multiLineError);
       return;
     }
+    core.setOutput("schema_errors", "");
 
     // if we are not to download the other schemas, then end the task asap
     if (!delete_others) {
-      core.notice("task complete");
+      core.setOutput("schemas_deleted", 0);
       return;
     }
 
@@ -103,12 +106,12 @@ export async function run() {
 
     // if there are no other schemas to manage, then end the task
     if (other_schemas.length == 0) {
-      core.notice("task complete");
+      core.setOutput("schemas_deleted", 0);
       return;
     }
 
     // otherwise, march through and delete the other schemas
-    let failed_delete = false;
+    let failed_delete = false, deleted_schemas = 0;
     core.info(`attempting to delete ${other_schemas.length} other schemas...`);
     for (const schema_id of other_schemas) {
       failed_delete = false;
@@ -134,9 +137,11 @@ export async function run() {
           core.setFailed(`failed to delete ${schema_id}, exiting!!`);
           return;
         }
+      } else {
+        ++deleted_schemas;
       }
     }
-    core.notice("task complete");
+    core.setOutput("schemas_deleted", deleted_schemas);
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

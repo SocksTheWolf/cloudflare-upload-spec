@@ -28,6 +28,12 @@ inputs:
     description: If this new spec should be enabled automatically
     default: true
 
+outputs:
+  schema_errors:
+    description: "errors while processing/parsing the openapi schema"
+  schemas_deleted:
+    description: "number of schemas that were deleted if enabled"
+
 runs:
   using: node24
   main: dist/index.js
