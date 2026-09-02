@@ -1,7 +1,7 @@
 {
   "name": "cloudflare-upload-spec",
   "description": "Uploads OpenAPI Specs to the API Shield",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "author": "SocksTheWolf",
   "type": "module",
   "private": true,
