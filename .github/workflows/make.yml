@@ -1,0 +1,15 @@
+name: Make GH Actions Release
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run:
+    name: Make
+    uses: socksthewolf/workflows/.github/workflows/release_actions.yml@main
+    secrets: inherit
+    with:
+      commit_message: "Update Build"
