@@ -26,6 +26,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "new": "npm version patch",
     "bundle": "npm run package",
     "local-action": "npx @github/local-action . src/main.js .env",
     "package": "npx rimraf ./dist && npx rollup --config rollup.config.js",

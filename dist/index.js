@@ -38321,7 +38321,6 @@ async function run() {
           msg += ` in ${JSON.stringify(itm.source)}`;
         }
         errorArray.push(msg);
-        notice(msg);
       });
       setFailed(`Unable to upload to API Shield, error code: ${api_shield_upload_resp.status}, reasons:\n${errorArray.join("\n")}`);
       return;
