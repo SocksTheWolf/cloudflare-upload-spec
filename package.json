@@ -48,10 +48,13 @@
   },
   "overrides": {
     "@actions/github": {
-      "undici": "^7.29.1"
+      "undici": "^7.30.1"
     },
     "@actions/http-client": {
-      "undici": "^7.29.1"
+      "undici": "^7.30.1"
+    },
+    "miniflare": {
+      "undici": "^7.30.1"
     }
   }
 }
